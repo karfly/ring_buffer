@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <sys/errno.h>
+#include <stdint.h>
+
 #include "ring_buffer.h"
 
 #define POISON_VALUE 0xDEAD
@@ -47,7 +49,7 @@ ret_code_t ring_buffer_construct(ring_buffer_t ** ring_buffer_ptr, uint32_t size
 
         new_ring_buffer->size = sizeof(new_ring_buffer->buffer) / sizeof(new_ring_buffer->buffer[0]);
 
-        memset(new_ring_buffer->buffer, NULL, new_ring_buffer->size);
+        memset(new_ring_buffer->buffer, 0, new_ring_buffer->size);
 
         new_ring_buffer->head = 0;
         new_ring_buffer->tail = 0;
@@ -154,7 +156,7 @@ ret_code_t ring_buffer_put(ring_buffer_t * ring_buffer, const ring_buffer_elem_t
                         }
                 }
 
-        ret = memcpy(buffer[ring_buffer->head], new_elem_ptr, ring_buffer->size_of_elem);
+        ret = memcpy((void *)buffer[ring_buffer->head], (void *)new_elem_ptr, ring_buffer->size_of_elem);
         if (!ret)
                 {
                 fprintf(stderr, "ring_buffer: failed to copy new element to the ring buffer\n");
@@ -238,7 +240,7 @@ ret_code_t ring_buffer_get(ring_buffer_t * ring_buffer, ring_buffer_elem_t * ele
                 goto error_empty_ring_buffer;
                 }
 
-        ret = memcpy(elem_ptr, buffer[ring_buffer->tail], ring_buffer->size_of_elem);
+        ret = memcpy((void *)elem_ptr, (void *)buffer[ring_buffer->tail], ring_buffer->size_of_elem);
         if (!ret)
                 {
                 fprintf(stderr, "ring_buffer: failed to copy element to get from the ring buffer\n");
