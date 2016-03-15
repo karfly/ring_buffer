@@ -279,6 +279,84 @@ ret_code_t ring_buffer_get(ring_buffer_t * ring_buffer, ring_buffer_elem_t * ele
         return ret_code;
         }
 
+ret_code_t ring_buffer_getn(ring_buffer_t * ring_buffer, ring_buffer_elem_t ** elem_arr_ptr, uint32_t n, uint32_t * read_n)
+        {
+        if (!ring_buffer || !elem_arr_ptr)
+                {
+                return WRONG_ARGUMENTS;
+                }
+
+        ret_code_t ret_code = ERROR;
+
+        int ret = 0;
+        void * ret_ptr = NULL;
+
+        ring_buffer_elem_t ** buffer = ring_buffer->buffer;
+        uint32_t size                = ring_buffer->size;
+        uint32_t size_of_elem        = ring_buffer->size_of_elem;
+
+        // Critical zone
+        ret = pthread_mutex_lock(&(ring_buffer->lock));
+        if (ret)
+                {
+                fprintf(stderr, "ring_buffer: failed to lock mutex. Reason: %s\n", strerror(ret));
+                goto error_mutex_lock;
+                }
+
+        if ((ring_buffer->tail == ring_buffer->head) || (buffer[ring_buffer->tail] == NULL))
+                {
+                fprintf(stderr, "ring_buffer: failed to get element. Reason: ring buffer is empty\n");
+                goto error_empty_ring_buffer;
+                }
+
+        uint32_t tail_iter = ring_buffer->tail;
+        uint32_t head      = ring_buffer->head;
+
+        int i = 0;
+        while ((tail_iter != head) && (i != n))
+                {
+                ret_ptr = memcpy((void *)elem_arr_ptr[i], (void *)buffer[tail_iter], size_of_elem);
+                if (!ret_ptr)
+                        {
+                        fprintf(stderr, "ring_buffer: failed to copy element to get from the ring buffer\n");
+                        goto error_mem_copy;
+                        }
+
+                _ring_buffer_inc(&tail_iter, size);
+                i++;
+                }
+
+        ring_buffer->tail   = tail_iter;
+        ring_buffer->count -= i;
+
+        if (read_n != NULL)
+                {
+                *read_n = (uint32_t)i;
+                }
+
+        ret_code = SUCCESS;
+
+        // Bottom section >>>
+
+        error_empty_ring_buffer:
+
+        error_mem_copy:
+
+        ret = pthread_mutex_unlock(&(ring_buffer->lock));
+        if (ret)
+                {
+                fprintf(stderr, "ring_buffer: failed to unlock mutex. Reason: %s\n", strerror(ret));
+                goto error_mutex_unlock;
+                }
+        //
+
+        error_mutex_lock:
+
+        error_mutex_unlock:
+
+        return ret_code;
+        }
+
 ret_code_t ring_buffer_print(ring_buffer_t * ring_buffer, void (* printer)(const ring_buffer_elem_t *))
         {
         if (!ring_buffer || !printer)
