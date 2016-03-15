@@ -76,6 +76,7 @@ ret_code_t ring_buffer_construct(ring_buffer_t ** ring_buffer_ptr, uint32_t size
                 if (ret_code == ERROR)
                         {
                         free(new_ring_buffer);
+                        new_ring_buffer = NULL;
                         }
 
         error_mem_alloc:
@@ -99,6 +100,7 @@ ret_code_t ring_buffer_destruct(ring_buffer_t ** ring_buffer_ptr)
         for (i = 0; i < ring_buffer->size; i++)
                 {
                 free(buffer[i]);
+                buffer[i] = NULL;
                 }
 
         ring_buffer->size = POISON_VALUE;
@@ -119,6 +121,7 @@ ret_code_t ring_buffer_destruct(ring_buffer_t ** ring_buffer_ptr)
                 }
 
         free(ring_buffer);
+        ring_buffer = NULL;
 
         return SUCCESS;
         }
@@ -207,6 +210,7 @@ ret_code_t ring_buffer_put(ring_buffer_t * ring_buffer, const ring_buffer_elem_t
         if (ret_code == ERROR)
                 {
                 free(buffer[ring_buffer->head]);
+                buffer[ring_buffer->head] = NULL;
                 }
 
         return ret_code;
