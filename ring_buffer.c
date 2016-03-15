@@ -133,6 +133,7 @@ ret_code_t ring_buffer_put(ring_buffer_t * ring_buffer, const ring_buffer_elem_t
         ret_code_t ret_code = ERROR;
 
         int ret = 0;
+        void * ret_ptr = NULL;
 
         ring_buffer_elem_t ** buffer = ring_buffer->buffer;
         uint32_t size                = ring_buffer->size;
@@ -156,8 +157,8 @@ ret_code_t ring_buffer_put(ring_buffer_t * ring_buffer, const ring_buffer_elem_t
                         }
                 }
 
-        ret = memcpy((void *)buffer[ring_buffer->head], (void *)new_elem_ptr, ring_buffer->size_of_elem);
-        if (!ret)
+        ret_ptr = memcpy((void *)buffer[ring_buffer->head], (void *)new_elem_ptr, ring_buffer->size_of_elem);
+        if (!ret_ptr)
                 {
                 fprintf(stderr, "ring_buffer: failed to copy new element to the ring buffer\n");
                 goto error_mem_copy;
@@ -222,6 +223,7 @@ ret_code_t ring_buffer_get(ring_buffer_t * ring_buffer, ring_buffer_elem_t * ele
         ret_code_t ret_code = ERROR;
 
         int ret = 0;
+        void * ret_ptr = NULL;
 
         ring_buffer_elem_t ** buffer = ring_buffer->buffer;
         uint32_t size                = ring_buffer->size;
@@ -240,8 +242,8 @@ ret_code_t ring_buffer_get(ring_buffer_t * ring_buffer, ring_buffer_elem_t * ele
                 goto error_empty_ring_buffer;
                 }
 
-        ret = memcpy((void *)elem_ptr, (void *)buffer[ring_buffer->tail], ring_buffer->size_of_elem);
-        if (!ret)
+        ret_ptr = memcpy((void *)elem_ptr, (void *)buffer[ring_buffer->tail], ring_buffer->size_of_elem);
+        if (!ret_ptr)
                 {
                 fprintf(stderr, "ring_buffer: failed to copy element to get from the ring buffer\n");
                 goto error_mem_copy;
