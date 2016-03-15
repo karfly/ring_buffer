@@ -36,6 +36,8 @@ ret_code_t ring_buffer_construct(ring_buffer_t ** ring_buffer_ptr, uint32_t size
                 return WRONG_ARGUMENTS;
                 }
 
+        ret_code_t ret_code = ERROR;
+
         ring_buffer_t * new_ring_buffer = (ring_buffer_t * )calloc(1, sizeof(ring_buffer_t));
         if (!new_ring_buffer)
                 {
@@ -64,15 +66,19 @@ ret_code_t ring_buffer_construct(ring_buffer_t ** ring_buffer_ptr, uint32_t size
 
         *ring_buffer_ptr = new_ring_buffer;
 
-        return SUCCESS;
+        ret_code = SUCCESS;
+
+        // Bottom section >>>
 
         error_mutex_init:
-
-                free(new_ring_buffer);
+                if (ret_code == ERROR)
+                        {
+                        free(new_ring_buffer);
+                        }
 
         error_mem_alloc:
 
-        return ERROR;
+        return ret_code;
         }
 
 
@@ -102,15 +108,15 @@ ret_code_t ring_buffer_destruct(ring_buffer_t ** ring_buffer_ptr)
         ring_buffer->count = POISON_VALUE;
 
         int ret = 0;
+
         ret = pthread_mutex_destroy(&(ring_buffer->lock));
-
-
-        free(ring_buffer);
         if (ret)
                 {
                 fprintf(stderr, "ring_buffer: failed to destroy mutex. Reason: %s\n", strerror(ret));
                 return ERROR;
                 }
+
+        free(ring_buffer);
 
         return SUCCESS;
         }
@@ -177,6 +183,8 @@ ret_code_t ring_buffer_put(ring_buffer_t * ring_buffer, const ring_buffer_elem_t
 
         ret_code = SUCCESS;
 
+        // Bottom section >>>
+
         error_mem_copy:
 
         error_mem_alloc:
@@ -241,6 +249,8 @@ ret_code_t ring_buffer_get(ring_buffer_t * ring_buffer, ring_buffer_elem_t * ele
         ring_buffer->count--;
 
         ret_code = SUCCESS;
+
+        // Bottom section >>>
 
         error_empty_ring_buffer:
 
